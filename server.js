@@ -7,53 +7,48 @@ const app = express();
 const server = http.createServer(app);
 const wss = new WebSocket.Server({ server });
 
-// 1. Serve static files (HTML/CSS/JS)
-app.use(express.static(path.join(__dirname, 'public')));
-
-// 2. REAL UPLOAD ENDPOINT (HTTP POST)
-// This handles the "Real" upload test efficiently
-app.post('/upload', (req, res) => {
-    // We consume the data stream but don't save it
-    // This accurately measures network speed without filling your hard drive
-    req.on('data', (chunk) => { 
-        // Data is flowing... 
-    });
-    
-    req.on('end', () => {
-        res.send('done');
-    });
+// --- FIX 1: ENABLE CORS (Allow Vercel to talk to Render) ---
+app.use((req, res, next) => {
+    res.header("Access-Control-Allow-Origin", "*"); // Allow ANY website to connect
+    res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
+    res.header("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+    if (req.method === 'OPTIONS') {
+        return res.sendStatus(200);
+    }
+    next();
 });
 
-// 3. WEBSOCKET ENDPOINTS (Ping & Download)
+app.use(express.static(path.join(__dirname, 'public')));
+
+// --- UPLOAD ENDPOINT ---
+app.post('/upload', (req, res) => {
+    req.on('data', (chunk) => { /* Receive data */ });
+    req.on('end', () => { res.send('done'); });
+});
+
+// --- WEBSOCKETS (Ping & Download) ---
 wss.on('connection', (ws) => {
+    console.log("New Client Connected");
+    
     ws.on('message', (message) => {
         let data;
-        try {
-            data = JSON.parse(message);
-        } catch (e) { return; } // Ignore non-JSON
+        try { data = JSON.parse(message); } catch(e) { return; }
 
-        // --- PING TEST ---
         if (data.action === 'ping') {
             ws.send(JSON.stringify({ action: 'pong', timestamp: data.timestamp }));
         }
-        
-        // --- DOWNLOAD TEST ---
         else if (data.action === 'download') {
-            // Send garbage data for 10 seconds
-            const chunkSize = 1024 * 50; // 50KB chunks
+            const chunkSize = 1024 * 50; 
             const garbage = Buffer.alloc(chunkSize, 'x');
             let start = Date.now();
             
             const sendLoop = () => {
-                // Stop after 10 seconds or if connection closes
                 if (ws.readyState === WebSocket.OPEN && Date.now() - start < 10000) {
                     ws.send(garbage);
-                    // Use setImmediate to send as fast as possible without blocking
                     setImmediate(sendLoop);
                 } else {
-                    if (ws.readyState === WebSocket.OPEN) {
+                    if (ws.readyState === WebSocket.OPEN) 
                         ws.send(JSON.stringify({ action: 'download_finish' }));
-                    }
                 }
             };
             sendLoop();
@@ -61,6 +56,7 @@ wss.on('connection', (ws) => {
     });
 });
 
-server.listen(3000, () => {
-    console.log('✅ Server is running! Open http://localhost:3000');
+const PORT = process.env.PORT || 3000;
+server.listen(PORT, () => {
+    console.log(`✅ Server running on port ${PORT}`);
 });
