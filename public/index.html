@@ -3,63 +3,93 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SpeedTest Pro</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;600;800&display=swap" rel="stylesheet">
+    <title>NETSPEED PRO</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Roboto+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-    <div class="app-background"></div>
+    <div class="bg-grid"></div>
+    <div class="scan-line"></div>
 
-    <main class="dashboard">
-        <header class="status-bar">
-            <div class="status-item">
-                <span class="label">SERVER</span>
-                <span class="value" id="server-txt">Cloudflare CDN</span>
+    <main class="container">
+        <header>
+            <div class="brand">
+                <div class="logo-icon"></div>
+                <h1>SPEED<span class="highlight">TESTER</span></h1>
             </div>
-            <div class="status-item right">
-                <span class="label">ISP</span>
-                <span class="value" id="isp-txt">Detecting...</span>
+            <div class="connection-status">
+                <div class="status-dot" id="server-dot"></div>
+                <span id="server-status">CONNECTING...</span>
             </div>
         </header>
 
-        <div class="gauge-section">
-            <div class="gauge-outer">
-                <div class="gauge-progress" id="gauge-progress"></div>
-                <div class="gauge-center">
-                    <div class="speed-display">
-                        <span id="main-speed">0</span>
-                        <small>Mbps</small>
+        <div class="dashboard-grid">
+            
+            <div class="panel main-panel">
+                <div class="gauge-wrapper">
+                    <svg class="gauge-svg" viewBox="0 0 200 200">
+                        <circle class="gauge-bg" cx="100" cy="100" r="90" />
+                        <circle class="gauge-progress" id="gauge-circle" cx="100" cy="100" r="90" />
+                    </svg>
+                    <div class="gauge-center">
+                        <div class="speed-value" id="main-speed">0.0</div>
+                        <div class="speed-label">Mbps</div>
+                        <div class="phase-label" id="phase-txt">IDLE</div>
                     </div>
-                    <div class="status-text" id="status-txt">READY</div>
+                </div>
+                
+                <button id="startBtn" class="cyber-btn">
+                    <span class="btn-text">START TEST</span>
+                    <span class="btn-glitch"></span>
+                </button>
+            </div>
+
+            <div class="panel stats-panel">
+                <div class="stat-row">
+                    <div class="stat-box">
+                        <span class="label">PING</span>
+                        <div class="value-group">
+                            <span class="value" id="ping-val">--</span>
+                            <span class="unit">ms</span>
+                        </div>
+                    </div>
+                    <div class="stat-box">
+                        <span class="label">JITTER</span>
+                        <div class="value-group">
+                            <span class="value" id="jitter-val">--</span>
+                            <span class="unit">ms</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="stat-row">
+                    <div class="stat-box active-box" id="dl-box">
+                        <span class="label">DOWNLOAD</span>
+                        <div class="value-group">
+                            <span class="value" id="down-val">--</span>
+                            <span class="unit">Mbps</span>
+                        </div>
+                    </div>
+                    <div class="stat-box" id="ul-box">
+                        <span class="label">UPLOAD</span>
+                        <div class="value-group">
+                            <span class="value" id="up-val">--</span>
+                            <span class="unit">Mbps</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="graph-container">
+                    <canvas id="speedChart"></canvas>
                 </div>
             </div>
-            
-            <button id="startBtn" class="glow-button">GO</button>
         </div>
 
-        <div class="stats-grid">
-            <div class="stat-card">
-                <span class="stat-label">PING</span>
-                <span class="stat-num" id="ping-val">--</span>
-                <span class="stat-unit">ms</span>
-            </div>
-            <div class="stat-card">
-                <span class="stat-label">JITTER</span>
-                <span class="stat-num" id="jitter-val">--</span>
-                <span class="stat-unit">ms</span>
-            </div>
-            <div class="stat-card">
-                <span class="stat-label">DOWNLOAD</span>
-                <span class="stat-num" id="down-val">--</span>
-                <span class="stat-unit">Mbps</span>
-            </div>
-            <div class="stat-card">
-                <span class="stat-label">UPLOAD</span>
-                <span class="stat-num" id="up-val">--</span>
-                <span class="stat-unit">Mbps</span>
-            </div>
+        <div class="footer-info">
+            <span>CLIENT: <b id="client-ip">Fetching...</b></span>
+            <span>SERVER: <b>Render Cloud (US-East)</b></span>
         </div>
     </main>
 

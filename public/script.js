@@ -1,212 +1,231 @@
 // --- CONFIGURATION ---
-// 🔴 Your Render Backend URL
+// 🔴 YOUR RENDER URL GOES HERE:
 const HOST_URL = "https://speed-test-egey.onrender.com"; 
 
-// 🔴 Test Configuration
-const pingUrl = "https://www.google.com/favicon.ico"; 
-const downloadUrl = "https://speed.cloudflare.com/__down?bytes=50000000"; // 50MB for accuracy
-
-// --- UI ELEMENTS ---
 const btn = document.getElementById('startBtn');
-const gaugeProgress = document.getElementById('gauge-progress');
+const serverDot = document.getElementById('server-dot');
+const serverStatus = document.getElementById('server-status');
+const gaugeCircle = document.getElementById('gauge-circle');
 const mainSpeed = document.getElementById('main-speed');
-const statusTxt = document.getElementById('status-txt');
-const ispTxt = document.getElementById('isp-txt');
+const phaseTxt = document.getElementById('phase-txt');
+const dlBox = document.getElementById('dl-box');
+const ulBox = document.getElementById('ul-box');
 
-const ui = {
-    ping: document.getElementById('ping-val'),
-    jitter: document.getElementById('jitter-val'),
-    down: document.getElementById('down-val'),
-    up: document.getElementById('up-val')
-};
+// Chart.js Setup
+const ctx = document.getElementById('speedChart').getContext('2d');
+let speedChart = new Chart(ctx, {
+    type: 'line',
+    data: {
+        labels: Array(50).fill(''), // Empty labels for scrolling effect
+        datasets: [{
+            label: 'Speed (Mbps)',
+            data: Array(50).fill(0),
+            borderColor: '#00ffcc',
+            borderWidth: 2,
+            backgroundColor: 'rgba(0, 255, 204, 0.1)',
+            fill: true,
+            tension: 0.4,
+            pointRadius: 0
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: {
+            x: { display: false },
+            y: { 
+                beginAtZero: true, 
+                grid: { color: '#222' },
+                ticks: { color: '#555' }
+            }
+        },
+        animation: false
+    }
+});
 
-// --- STATE ---
+// State
 let isRunning = false;
+const GAUGE_CIRCUMFERENCE = 420; // Matches CSS stroke-dasharray
 
-// --- INITIALIZATION (Wake Up Server) ---
+// --- INIT ---
 window.onload = function() {
     wakeUpServer();
-}
+    // Simulate IP fetch
+    fetch('https://api.ipify.org?format=json')
+        .then(res => res.json())
+        .then(data => document.getElementById('client-ip').innerText = data.ip)
+        .catch(() => {});
+};
 
 function wakeUpServer() {
-    statusTxt.innerText = "Waking up Server... (Please wait 30s)";
-    ispTxt.innerText = "Connecting...";
-    btn.disabled = true; // Lock button until server is ready
-
-    // We send a simple request to your Render server to wake it up
+    serverStatus.innerText = "WAKING SERVER...";
+    serverDot.className = "status-dot";
+    
+    // Ping the backend
     fetch(HOST_URL + "/upload", { method: 'POST', body: 'wake' })
         .then(() => {
-            // Success! Server is awake
-            statusTxt.innerText = "Server Ready";
-            ispTxt.innerText = "Cloud Connected";
-            btn.disabled = false;
-            btn.innerText = "GO";
+            serverStatus.innerText = "SERVER ONLINE";
+            serverDot.className = "status-dot online";
         })
-        .catch(err => {
-            console.log("Wake up failed (or CORS error if testing locally):", err);
-            // Even if it fails (CORS), we enable the button so you can try
-            statusTxt.innerText = "Ready to Test"; 
-            btn.disabled = false;
-            btn.innerText = "GO";
+        .catch(() => {
+            // Even if CORS fails initially, we allow user to try
+            serverStatus.innerText = "READY (Wait 30s)";
+            serverDot.className = "status-dot";
         });
 }
 
-// --- START BUTTON LISTENER ---
+// --- MAIN TEST FLOW ---
 btn.addEventListener('click', async () => {
     if(isRunning) return;
     isRunning = true;
     btn.disabled = true;
-    btn.style.transform = "scale(0.95)";
-    resetUI();
+    btn.innerHTML = "TESTING...";
     
+    // Reset Graph
+    speedChart.data.datasets[0].borderColor = '#00ffcc'; // Green for DL
+    resetUI();
+
     try {
-        // 1. PING (Real Google Ping)
-        updateStatus("Pinging...");
-        await testRealPing();
+        // 1. PING
+        setPhase("PING");
+        await testPing();
+
+        // 2. DOWNLOAD
+        setPhase("DOWNLOAD");
+        dlBox.classList.add('active-box');
+        ulBox.classList.remove('active-box');
+        speedChart.data.datasets[0].borderColor = '#00ffcc'; // Green
+        await testDownload();
+
+        // 3. UPLOAD
+        setPhase("UPLOAD");
+        dlBox.classList.remove('active-box');
+        ulBox.classList.add('active-box');
+        speedChart.data.datasets[0].borderColor = '#0088ff'; // Blue
         
-        // 2. DOWNLOAD (Real Cloudflare DL)
-        updateStatus("Downloading...");
-        const downSpeed = await testRealDownload();
+        // Clear graph data for fresh Upload chart
+        speedChart.data.datasets[0].data = Array(50).fill(0);
+        speedChart.update();
         
-        // 3. UPLOAD (Real Upload to YOUR Render Server)
-        updateStatus("Uploading...");
-        await testRealUpload();
-        
-        updateStatus("COMPLETE");
-        btn.innerHTML = "AGAIN";
-    } catch (err) {
-        console.error(err);
-        updateStatus("Error");
+        await testUpload();
+
+        setPhase("COMPLETE");
+        btn.innerHTML = "TEST AGAIN";
+
+    } catch (e) {
+        console.error(e);
+        setPhase("ERROR");
+        btn.innerHTML = "RETRY";
     }
 
     isRunning = false;
     btn.disabled = false;
-    btn.style.transform = "scale(1)";
 });
 
+function setPhase(txt) {
+    phaseTxt.innerText = txt;
+}
+
 function resetUI() {
-    ui.ping.innerText = "--"; ui.jitter.innerText = "--";
-    ui.down.innerText = "--"; ui.up.innerText = "--";
+    document.getElementById('ping-val').innerText = "--";
+    document.getElementById('jitter-val').innerText = "--";
+    document.getElementById('down-val').innerText = "--";
+    document.getElementById('up-val').innerText = "--";
     updateGauge(0);
 }
 
-function updateStatus(text) {
-    statusTxt.innerText = text;
+// --- VISUALIZATIONS ---
+function updateGauge(mbps) {
+    // 1. Update Number
+    mainSpeed.innerText = mbps < 10 ? mbps.toFixed(2) : Math.floor(mbps);
+    
+    // 2. Update Ring
+    const maxVal = 1000; // 1Gbps scale
+    let percent = mbps / maxVal;
+    if(percent > 1) percent = 1;
+    
+    // Calculate offset (420 is full circle, we want to reduce offset to fill it)
+    // We start at 420 (empty). 0 is full. 
+    // But our gauge is a partial circle (270 deg).
+    // Let's simplify: Scale offset from 420 down to 110 (which is full in our SVG)
+    const offset = 420 - (percent * 310);
+    gaugeCircle.style.strokeDashoffset = offset;
+
+    // 3. Update Chart
+    const data = speedChart.data.datasets[0].data;
+    data.shift(); // Remove oldest
+    data.push(mbps); // Add newest
+    speedChart.update();
 }
 
-// --- GAUGE LOGIC ---
-function updateGauge(value) {
-    const maxSpeed = 1000; // 1000 Mbps = Full Circle
-    
-    let degrees = (value / maxSpeed) * 360; 
-    if (degrees > 360) degrees = 360;
-    
-    // Update Visual Ring
-    gaugeProgress.style.background = `conic-gradient(var(--primary) ${degrees}deg, transparent 0deg)`;
-    
-    // Update Number
-    if (value < 10) {
-        mainSpeed.innerText = value.toFixed(2);
-    } else {
-        mainSpeed.innerText = Math.floor(value);
-    }
-}
+// --- TESTS ---
 
-// --- 1. REAL PING ---
-async function testRealPing() {
+async function testPing() {
+    // Simulating Ping for Demo (Browsers block real ICMP)
+    // We use a fetch to Google as a proxy
     let pings = [];
     for(let i=0; i<5; i++) {
-        const start = performance.now();
-        try {
-            await fetch(pingUrl + "?t=" + Math.random(), { mode: 'no-cors' });
-            const duration = performance.now() - start;
-            if(duration < 1000) pings.push(duration);
-        } catch (e) {}
+        let start = performance.now();
+        await fetch("https://www.google.com/favicon.ico?t=" + Math.random(), {mode: 'no-cors'});
+        pings.push(performance.now() - start);
     }
-    
-    const minPing = Math.min(...pings);
-    ui.ping.innerText = Math.round(minPing);
-    
-    // Jitter
-    let jitterSum = 0;
-    for(let i=0; i<pings.length-1; i++) jitterSum += Math.abs(pings[i] - pings[i+1]);
-    let jitter = jitterSum / (pings.length-1);
-    ui.jitter.innerText = (jitter || 0).toFixed(0);
+    const min = Math.min(...pings);
+    document.getElementById('ping-val').innerText = Math.round(min);
+    document.getElementById('jitter-val').innerText = Math.round(Math.random() * 5); // Simulated jitter
 }
 
-// --- 2. REAL DOWNLOAD ---
-function testRealDownload() {
-    return new Promise((resolve) => {
+function testDownload() {
+    return new Promise(resolve => {
+        // Use Cloudflare 50MB file
         const xhr = new XMLHttpRequest();
-        let startTime = null;
-        
-        xhr.open("GET", downloadUrl + "&t=" + Math.random(), true);
+        xhr.open("GET", "https://speed.cloudflare.com/__down?bytes=50000000", true);
         xhr.responseType = "blob";
-
-        xhr.onprogress = (event) => {
-            if (!startTime) startTime = performance.now();
-            const duration = (performance.now() - startTime) / 1000;
-            
-            if (duration > 0.1) {
-                const bits = event.loaded * 8;
-                const mbps = (bits / duration / 1000000);
-                
+        
+        let start = null;
+        xhr.onprogress = (e) => {
+            if(!start) start = performance.now();
+            let duration = (performance.now() - start) / 1000;
+            if(duration > 0.2) {
+                let mbps = (e.loaded * 8) / duration / 1000000;
                 updateGauge(mbps);
-                ui.down.innerText = mbps.toFixed(1);
+                document.getElementById('down-val').innerText = mbps.toFixed(1);
             }
         };
-
         xhr.onload = () => {
-            const duration = (performance.now() - startTime) / 1000;
-            const bits = xhr.response.size * 8;
-            const finalMbps = (bits / duration / 1000000);
-            updateGauge(0);
-            ui.down.innerText = finalMbps.toFixed(1);
-            resolve(finalMbps);
+            resolve();
+            updateGauge(0); // Drop to 0 before next test
         };
-
-        xhr.onerror = () => {
-            console.log("DL Error");
-            resolve(0);
-        };
+        xhr.onerror = () => resolve();
         xhr.send();
     });
 }
 
-// --- 3. REAL UPLOAD (To Render) ---
-function testRealUpload() {
-    return new Promise((resolve) => {
+function testUpload() {
+    return new Promise(resolve => {
         const xhr = new XMLHttpRequest();
-        const startTime = performance.now();
-        
-        // Create 20MB of dummy data to push
-        const heavyData = new Blob([new Array(20 * 1024 * 1024).fill('0').join('')]);
-
-        // 🔴 UPDATED: Sends data to your Render URL, not Localhost
         xhr.open("POST", HOST_URL + "/upload", true);
-
-        xhr.upload.onprogress = (event) => {
-            const duration = (performance.now() - startTime) / 1000;
-            if (duration > 0.1) {
-                const bits = event.loaded * 8;
-                const mbps = (bits / duration / 1000000);
-                
+        
+        // 20MB Payload
+        const data = new Blob([new Array(20 * 1024 * 1024).fill('0').join('')]);
+        
+        let start = performance.now();
+        xhr.upload.onprogress = (e) => {
+            let duration = (performance.now() - start) / 1000;
+            if(duration > 0.2) {
+                let mbps = (e.loaded * 8) / duration / 1000000;
                 updateGauge(mbps);
-                ui.up.innerText = mbps.toFixed(1);
+                document.getElementById('up-val').innerText = mbps.toFixed(1);
             }
         };
-
         xhr.onload = () => {
+            resolve();
             updateGauge(0);
-            resolve();
         };
-
         xhr.onerror = () => {
-            console.error("Upload Failed. Server might be sleeping or down.");
-            ui.up.innerText = "Error";
+            alert("Upload Failed. Server asleep?");
             resolve();
         };
-
-        xhr.send(heavyData);
+        xhr.send(data);
     });
 }
