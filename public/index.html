@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SpeedTest Pro</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <div class="app-background"></div>
+
+    <main class="dashboard">
+        <header class="status-bar">
+            <div class="status-item">
+                <span class="label">SERVER</span>
+                <span class="value" id="server-txt">Cloudflare CDN</span>
+            </div>
+            <div class="status-item right">
+                <span class="label">ISP</span>
+                <span class="value" id="isp-txt">Detecting...</span>
+            </div>
+        </header>
+
+        <div class="gauge-section">
+            <div class="gauge-outer">
+                <div class="gauge-progress" id="gauge-progress"></div>
+                <div class="gauge-center">
+                    <div class="speed-display">
+                        <span id="main-speed">0</span>
+                        <small>Mbps</small>
+                    </div>
+                    <div class="status-text" id="status-txt">READY</div>
+                </div>
+            </div>
+            
+            <button id="startBtn" class="glow-button">GO</button>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <span class="stat-label">PING</span>
+                <span class="stat-num" id="ping-val">--</span>
+                <span class="stat-unit">ms</span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-label">JITTER</span>
+                <span class="stat-num" id="jitter-val">--</span>
+                <span class="stat-unit">ms</span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-label">DOWNLOAD</span>
+                <span class="stat-num" id="down-val">--</span>
+                <span class="stat-unit">Mbps</span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-label">UPLOAD</span>
+                <span class="stat-num" id="up-val">--</span>
+                <span class="stat-unit">Mbps</span>
+            </div>
+        </div>
+    </main>
+
+    <script src="script.js"></script>
+</body>
+</html>

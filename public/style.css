@@ -1,0 +1,171 @@
+:root {
+    --bg-dark: #0f1014;
+    --panel-bg: rgba(255, 255, 255, 0.05);
+    --primary: #00f2ff; /* Cyan Neon */
+    --secondary: #7000ff; /* Purple Neon */
+    --text-main: #ffffff;
+    --text-dim: #8b9bb4;
+    --font-stack: 'Inter', sans-serif;
+}
+
+body {
+    margin: 0;
+    font-family: var(--font-stack);
+    background-color: var(--bg-dark);
+    color: var(--text-main);
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
+}
+
+/* Background Mesh Gradient */
+.app-background {
+    position: absolute;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: radial-gradient(circle at 10% 20%, #1a1b2e 0%, #0f1014 90%);
+    z-index: -1;
+}
+
+.dashboard {
+    width: 100%;
+    max-width: 480px;
+    padding: 30px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+}
+
+/* Header */
+.status-bar {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 40px;
+    font-size: 14px;
+}
+
+.status-item { display: flex; flex-direction: column; }
+.status-item.right { align-items: flex-end; }
+.label { color: var(--text-dim); font-size: 12px; letter-spacing: 1px; margin-bottom: 4px; }
+.value { font-weight: 600; color: var(--primary); text-shadow: 0 0 10px rgba(0, 242, 255, 0.3); }
+
+/* GAUGE (The Circle) */
+.gauge-section {
+    position: relative;
+    width: 280px;
+    height: 280px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-bottom: 50px;
+}
+
+.gauge-outer {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    background: conic-gradient(var(--panel-bg) 0deg, var(--panel-bg) 360deg);
+    box-shadow: 0 0 30px rgba(0,0,0,0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+/* This is the part that spins/fills */
+.gauge-progress {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    background: conic-gradient(var(--primary) 0deg, transparent 0deg);
+    transition: background 0.1s linear; /* Smooth fill */
+    mask: radial-gradient(transparent 65%, black 66%);
+    -webkit-mask: radial-gradient(transparent 65%, black 66%);
+}
+
+.gauge-center {
+    z-index: 10;
+    text-align: center;
+}
+
+.speed-display {
+    font-size: 80px;
+    font-weight: 800;
+    line-height: 1;
+    letter-spacing: -2px;
+}
+
+.speed-display small {
+    display: block;
+    font-size: 16px;
+    font-weight: 400;
+    color: var(--text-dim);
+    letter-spacing: normal;
+    margin-top: -5px;
+}
+
+.status-text {
+    margin-top: 10px;
+    color: var(--primary);
+    font-size: 14px;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+}
+
+/* GO BUTTON */
+.glow-button {
+    position: absolute;
+    bottom: -20px;
+    background: transparent;
+    color: var(--primary);
+    border: 2px solid var(--primary);
+    width: 80px;
+    height: 80px; /* Circle */
+    border-radius: 50%;
+    font-size: 20px;
+    font-weight: 800;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 0 15px rgba(0, 242, 255, 0.1);
+    background: rgba(0, 10, 20, 0.8);
+    backdrop-filter: blur(5px);
+}
+
+.glow-button:hover {
+    background: var(--primary);
+    color: #000;
+    box-shadow: 0 0 40px var(--primary);
+    transform: scale(1.1);
+}
+
+.glow-button:disabled {
+    border-color: #333;
+    color: #555;
+    box-shadow: none;
+    cursor: default;
+    transform: scale(0); /* Hide button while testing */
+}
+
+/* STATS GRID */
+.stats-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr 1fr;
+    gap: 15px;
+    width: 100%;
+}
+
+.stat-card {
+    background: var(--panel-bg);
+    padding: 15px 10px;
+    border-radius: 12px;
+    text-align: center;
+    border: 1px solid rgba(255,255,255,0.05);
+}
+
+.stat-label { font-size: 10px; color: var(--text-dim); display: block; margin-bottom: 5px; }
+.stat-num { font-size: 18px; font-weight: 700; color: #fff; display: block; }
+.stat-unit { font-size: 10px; color: var(--text-dim); }
