@@ -3,95 +3,121 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NETSPEED PRO</title>
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Roboto+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <title>NetSpeed Pro - Ultimate Speed Test</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;500;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-    <div class="bg-grid"></div>
-    <div class="scan-line"></div>
-
-    <main class="container">
-        <header>
-            <div class="brand">
-                <div class="logo-icon"></div>
-                <h1>SPEED<span class="highlight">TESTER</span></h1>
+    <div class="app-container">
+        
+        <nav class="navbar">
+            <div class="logo">
+                <i class="fas fa-bolt"></i> NET<span>SPEED</span>
             </div>
-            <div class="connection-status">
-                <div class="status-dot" id="server-dot"></div>
-                <span id="server-status">CONNECTING...</span>
+            <div class="server-status" id="connection-status">
+                <div class="dot"></div> Server Idle
             </div>
-        </header>
+        </nav>
 
-        <div class="dashboard-grid">
+        <main class="test-interface">
             
-            <div class="panel main-panel">
-                <div class="gauge-wrapper">
-                    <svg class="gauge-svg" viewBox="0 0 200 200">
-                        <circle class="gauge-bg" cx="100" cy="100" r="90" />
-                        <circle class="gauge-progress" id="gauge-circle" cx="100" cy="100" r="90" />
-                    </svg>
-                    <div class="gauge-center">
-                        <div class="speed-value" id="main-speed">0.0</div>
-                        <div class="speed-label">Mbps</div>
-                        <div class="phase-label" id="phase-txt">IDLE</div>
-                    </div>
-                </div>
+            <div class="gauge-wrapper">
+                <div class="gauge-ring-bg"></div>
+                <div class="gauge-ring-fill" id="progress-ring"></div>
                 
-                <button id="startBtn" class="cyber-btn">
-                    <span class="btn-text">START TEST</span>
-                    <span class="btn-glitch"></span>
-                </button>
+                <div class="gauge-center">
+                    <div class="speed-val" id="main-speed">0.0</div>
+                    <div class="speed-unit">Mbps</div>
+                    <div class="phase-text" id="phase-txt">START</div>
+                </div>
+
+                <button id="startBtn" class="go-btn">GO</button>
             </div>
 
-            <div class="panel stats-panel">
-                <div class="stat-row">
-                    <div class="stat-box">
+            <div class="graph-area">
+                <canvas id="speedChart"></canvas>
+            </div>
+
+            <div class="stats-grid">
+                <div class="stat-box">
+                    <i class="fas fa-exchange-alt"></i>
+                    <div class="stat-info">
                         <span class="label">PING</span>
-                        <div class="value-group">
-                            <span class="value" id="ping-val">--</span>
-                            <span class="unit">ms</span>
-                        </div>
+                        <span class="val" id="ping-val">--</span>
                     </div>
-                    <div class="stat-box">
+                </div>
+                <div class="stat-box">
+                    <i class="fas fa-random"></i>
+                    <div class="stat-info">
                         <span class="label">JITTER</span>
-                        <div class="value-group">
-                            <span class="value" id="jitter-val">--</span>
-                            <span class="unit">ms</span>
-                        </div>
+                        <span class="val" id="jitter-val">--</span>
                     </div>
                 </div>
-                
-                <div class="stat-row">
-                    <div class="stat-box active-box" id="dl-box">
+                <div class="stat-box">
+                    <i class="fas fa-arrow-down"></i>
+                    <div class="stat-info">
                         <span class="label">DOWNLOAD</span>
-                        <div class="value-group">
-                            <span class="value" id="down-val">--</span>
-                            <span class="unit">Mbps</span>
-                        </div>
+                        <span class="val" id="down-val">--</span>
                     </div>
-                    <div class="stat-box" id="ul-box">
+                </div>
+                <div class="stat-box">
+                    <i class="fas fa-arrow-up"></i>
+                    <div class="stat-info">
                         <span class="label">UPLOAD</span>
-                        <div class="value-group">
-                            <span class="value" id="up-val">--</span>
-                            <span class="unit">Mbps</span>
-                        </div>
+                        <span class="val" id="up-val">--</span>
                     </div>
                 </div>
+            </div>
 
-                <div class="graph-container">
-                    <canvas id="speedChart"></canvas>
+        </main>
+
+        <div class="footer-bar">
+            <div class="footer-item">
+                <i class="fas fa-user-circle"></i>
+                <div class="footer-text">
+                    <span class="label">PROVIDER</span>
+                    <strong id="user-isp">Detecting...</strong>
+                    <small id="user-ip">...</small>
                 </div>
+            </div>
+            <div class="footer-item right">
+                <div class="footer-text align-right">
+                    <span class="label">SERVER</span>
+                    <strong>Render Cloud</strong>
+                    <small id="server-loc">Global CDN</small>
+                </div>
+                <i class="fas fa-server"></i>
             </div>
         </div>
 
-        <div class="footer-info">
-            <span>CLIENT: <b id="client-ip">Fetching...</b></span>
-            <span>SERVER: <b>Render Cloud (US-East)</b></span>
+    </div>
+
+    <section class="website-content">
+        <div class="content-wrapper">
+            <div class="content-col">
+                <h3><i class="fas fa-info-circle"></i> How it works</h3>
+                <p>NetSpeed Pro measures your internet connection by simulating real-world file transfers. It downloads data from a nearby global CDN server to test bandwidth and uploads data to our secure cloud to test upstream capacity.</p>
+            </div>
+            <div class="content-col">
+                <h3><i class="fas fa-lock"></i> Privacy First</h3>
+                <p>We believe in privacy. No personal browsing data is stored. Your IP address is used solely to identify your Internet Service Provider (ISP) and match you with the closest testing server.</p>
+            </div>
+            <div class="content-col">
+                <h3><i class="fas fa-wifi"></i> Understanding Metrics</h3>
+                <ul>
+                    <li><b>Ping:</b> Reaction time (lower is better).</li>
+                    <li><b>Jitter:</b> Stability (lower is better).</li>
+                    <li><b>Mbps:</b> Megabits per second (higher is better).</li>
+                </ul>
+            </div>
         </div>
-    </main>
+        <div class="copyright">
+            &copy; 2025 NetSpeed Pro. All rights reserved. Powered by Render.
+        </div>
+    </section>
 
     <script src="script.js"></script>
 </body>
